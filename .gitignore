@@ -1,1 +1,8 @@
 Makefile.old
+download/*
+Makefile
+Makefile.old
+MYMETA.*
+blib/
+pm_to_blib
+.DS_Store
