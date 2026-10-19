@@ -103,8 +103,8 @@ sub build_figure {
     $fig->tight_layout;
     # tight_layout sizes the left margin for the tick numbers only, so the rotated y label
     # (ch1, ch2, ...) falls outside the figure.  Make room for "2.00e+04" plus the label.
-    my $ml = int(0.33 * $W); $ml = 100 if $ml > 100;
-    $_->margin_left($ml) for @ax;
+#    my $ml = int(0.33 * $W); $ml = 100 if $ml > 100;
+#    $_->margin_left($ml) for @ax;
     return $fig;
 }
 
