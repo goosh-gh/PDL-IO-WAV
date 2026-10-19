@@ -1,0 +1,23 @@
+This software is copyright (c) 2026 by Shugo Suwazono.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+Terms of the Perl programming language system itself:
+
+  a) the GNU General Public License as published by the Free Software
+     Foundation; either version 1, or (at your option) any later
+     version, or
+
+  b) the "Artistic License".
+
+The full text of these two licenses is distributed with Perl 5 and can
+be read locally with:
+
+  perldoc perlgpl       # GNU General Public License, version 1
+  perldoc perlartistic  # The Artistic License
+
+or online at:
+
+  https://dev.perl.org/licenses/gpl1.html
+  https://dev.perl.org/licenses/artistic.html

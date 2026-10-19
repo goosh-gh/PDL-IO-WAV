@@ -1,0 +1,134 @@
+#!/usr/bin/env perl
+# plot_wav_line.pl
+#
+# 何をするスクリプトか:
+#   WAV ファイル(PCM 8/16/32bit または float 32/64bit)を読み込み、
+#   横軸=時間(秒)、縦軸=振幅 の折れ線グラフを PDL::Graphics::Cairo で表示する。
+#   extend_wav_plateau.pl で作った延長波形(standard_10s.wav など)の確認用。
+#   チャンネルが複数ある場合は重ねて描く。
+#
+# 使い方:
+#   perl plot_wav_line.pl standard_10s.wav
+#
+# 操作(giza-server の窓):
+#   横スライダ = 表示位置(左端=先頭の立ち上がり、右端=末尾の立ち下がり)
+#   縦スライダ = 表示幅(下=約20サンプル、上=全長。対数)。初期は 20 ms 幅
+#   縦軸の範囲は全体の最小〜最大で固定(区間を動かしても振幅を比べられる)
+#   表示区間の点数が窓の横ピクセルより多いときは、列ごとの min/max で描く
+#
+# 描画は examples/example_gs_slider.pl と同じ Driver::GS->show_interactive 方式。
+
+use strict;
+use warnings;
+use PDL;
+use PDL::NiceSlice;
+use File::Basename qw(basename);
+use PDL::Graphics::Cairo qw(figure);
+use PDL::Graphics::Cairo::Driver::GS;
+
+my $infile = $ARGV[0] // die "使い方: perl $0 input.wav\n";
+
+# ---- WAV 読み込み(fmt と data チャンクを取り出す) ----
+open my $fh, '<:raw', $infile or die "open $infile: $!";
+local $/; my $raw = <$fh>; close $fh;
+substr($raw, 0, 4) eq 'RIFF' && substr($raw, 8, 4) eq 'WAVE' or die "RIFF/WAVE ではありません\n";
+my ($tag, $ch, $rate, $bits, $bytes);
+my $pos = 12;
+while ($pos + 8 <= length $raw) {
+    my ($id, $size) = unpack 'a4 V', substr($raw, $pos, 8);
+    if ($id eq 'fmt ') {
+        ($tag, $ch, $rate, undef, undef, $bits) = unpack 'v v V V v v', substr($raw, $pos + 8, 16);
+    } elsif ($id eq 'data') {
+        $bytes = substr($raw, $pos + 8, $size);
+        last;
+    }
+    $pos += 8 + $size + ($size & 1);
+}
+defined $bytes && defined $tag or die "fmt/data チャンクが見つかりません\n";
+$tag = 1 if $tag == 0xFFFE;
+
+my $type = ($tag == 1 && $bits == 8)  ? byte
+         : ($tag == 1 && $bits == 16) ? short
+         : ($tag == 1 && $bits == 32) ? long
+         : ($tag == 3 && $bits == 32) ? float
+         : ($tag == 3 && $bits == 64) ? double
+         : die "未対応の形式: tag=$tag bits=$bits\n";
+
+my $nper = $bits / 8;
+my $n = int(length($bytes) / ($nper * $ch));
+my $x = zeroes($type, $ch, $n);                      # dims: (チャンネル, 時間)
+${ $x->get_dataref } = substr($bytes, 0, $n * $ch * $nper);
+$x->upd_data;
+if (unpack('N', pack('L', 1)) == 1 && $bits > 8) {   # big-endian 機のみ
+    $x->bswap2 if $bits == 16; $x->bswap4 if $bits == 32; $x->bswap8 if $bits == 64;
+}
+my $y = $x->double;
+$y -= 128 if $tag == 1 && $bits == 8;                # 8bit は符号なし(中心128)
+my $t = sequence($n) / $rate;                        # 時間 [s]
+
+# ---- 描画 ----
+# 横スライダ(id 0) = 表示位置(0=先頭 … 1=末尾)
+# 縦スライダ(id 1) = 表示幅(下=狭い … 上=全体)。対数で 20 サンプル〜全長
+my $T     = $n / $rate;
+my $wmin  = 20 / $rate;
+my $wmax  = $T;
+my $w0    = 0.02 < $wmax ? 0.02 : $wmax;             # 初期表示幅 20 ms
+my $v0    = log($w0 / $wmin) / log($wmax / $wmin);
+my $ymin  = $y->min; my $ymax = $y->max;
+my $pad   = 0.05 * (($ymax - $ymin) || 1);
+my @color = qw(steelblue darkorange seagreen crimson);
+
+my $gs = PDL::Graphics::Cairo::Driver::GS->new(
+    width => 900, height => 400, title => basename($infile));
+
+$gs->show_interactive(
+    init   => { 0 => 0.0, 1 => $v0 },
+    render => sub {
+        my ($s, $W, $H) = @_;
+        my $pos = $s->{0} // 0.0;
+        my $v   = $s->{1} // $v0;
+        my $win = $wmin * ($wmax / $wmin) ** $v;     # 表示幅 [s]
+        $win = $T if $win > $T;
+        my $t0  = $pos * ($T - $win);
+        my $i0  = int($t0 * $rate);
+        my $i1  = int(($t0 + $win) * $rate); $i1 = $n - 1 if $i1 > $n - 1;
+        my $npt = $i1 - $i0 + 1;
+
+        my $fig = figure(width => $W, height => $H);
+        my ($ax) = $fig->subplots(1, 1);
+        for my $c (0 .. $ch - 1) {
+            my ($tt, $yy) = envelope($t->slice("$i0:$i1"), $y->slice("($c),$i0:$i1"), $W);
+            $ax->line($tt, $yy, lw => 1.2, color => $color[$c % @color],
+                      label => "ch" . ($c + 1));
+        }
+        $ax->xlim($t0, $t0 + $win);
+        $ax->ylim($ymin - $pad, $ymax + $pad);
+        $ax->xlabel('time [s]');
+        $ax->ylabel('amplitude');
+        $ax->title(sprintf '%s   %.4f – %.4f s  (幅 %.4g s, %d 点)',
+                   basename($infile), $t0, $t0 + $win, $win, $npt);
+        $ax->legend if $ch > 1 && $ax->can('legend');
+        $fig->tight_layout;
+        return $fig;
+    },
+);
+
+# 点数が画面の横ピクセルより大幅に多いとき、ピクセル列ごとの min/max を
+# 交互に並べて描く(塗りつぶしにならず、包絡とピークが正しく残る)
+sub envelope {
+    my ($tt, $yy, $W) = @_;
+    my $m  = $tt->nelem;
+    my $nb = int($W) || 1;
+    return ($tt, $yy) if $m <= 4 * $nb;
+    # 1 列 k 点。割り切れない余りは末尾の値で埋めて、最後まで含める
+    # (以前は余りを捨てていて、右端が欠けていた)
+    my $k   = int(($m + $nb - 1) / $nb);
+    my $pad = $k * $nb - $m;
+    my $yp  = $pad ? $yy->glue(0, $yy->slice('-1')->dummy(0, $pad)->flat) : $yy;
+    my $tp  = $pad ? $tt->glue(0, $tt->slice('-1')->dummy(0, $pad)->flat) : $tt;
+    my $yb  = $yp->reshape($k, $nb);
+    my $tb  = $tp->reshape($k, $nb)->slice('(0)');
+    my $mm = cat($yb->minimum, $yb->maximum)->xchg(0, 1)->flat;   # mn0,mx0,mn1,mx1,…
+    my $t2 = cat($tb, $tb)->xchg(0, 1)->flat;
+    return ($t2, $mm);
+}

@@ -1,0 +1,167 @@
+{
+ "ext_f32": {
+  "bits": 32,
+  "channels": 2,
+  "extensible": 1,
+  "format": "float",
+  "frames": 300,
+  "kind": "float",
+  "rate": 48000
+ },
+ "ext_pcm16_6ch": {
+  "bits": 16,
+  "channel_mask": 63,
+  "channels": 6,
+  "extensible": 1,
+  "format": "pcm",
+  "frames": 300,
+  "kind": "int",
+  "rate": 48000
+ },
+ "ext_pcm24": {
+  "bits": 24,
+  "channel_mask": 3,
+  "channels": 2,
+  "extensible": 1,
+  "format": "pcm",
+  "frames": 500,
+  "kind": "int",
+  "rate": 96000
+ },
+ "ext_pcm32_valid24": {
+  "bits": 32,
+  "channels": 2,
+  "extensible": 1,
+  "format": "pcm",
+  "frames": 500,
+  "kind": "int",
+  "rate": 96000,
+  "valid_bits": 24
+ },
+ "f32_stereo": {
+  "bits": 32,
+  "channels": 2,
+  "format": "float",
+  "frames": 997,
+  "kind": "float",
+  "rate": 44100
+ },
+ "f64_mono": {
+  "bits": 64,
+  "channels": 1,
+  "format": "float",
+  "frames": 997,
+  "kind": "float",
+  "rate": 44100
+ },
+ "pcm16_chunks_after": {
+  "bits": 16,
+  "channels": 2,
+  "format": "pcm",
+  "frames": 400,
+  "kind": "int",
+  "note": "LIST/JUNK after data",
+  "rate": 8000
+ },
+ "pcm16_chunks_before": {
+  "bits": 16,
+  "channels": 2,
+  "format": "pcm",
+  "frames": 400,
+  "kind": "int",
+  "note": "JUNK/LIST before and between fmt and data",
+  "rate": 8000
+ },
+ "pcm16_fmt18": {
+  "bits": 16,
+  "channels": 2,
+  "format": "pcm",
+  "frames": 400,
+  "kind": "int",
+  "note": "fmt chunk of 18 bytes (cbSize = 0)",
+  "rate": 8000
+ },
+ "pcm16_mono": {
+  "bits": 16,
+  "channels": 1,
+  "format": "pcm",
+  "frames": 997,
+  "kind": "int",
+  "rate": 48000
+ },
+ "pcm16_stereo": {
+  "bits": 16,
+  "channels": 2,
+  "format": "pcm",
+  "frames": 997,
+  "kind": "int",
+  "rate": 48000
+ },
+ "pcm16_stream": {
+  "bits": 16,
+  "channels": 2,
+  "format": "pcm",
+  "frames": 400,
+  "kind": "int",
+  "rate": 8000,
+  "truncated": 1
+ },
+ "pcm16_truncated": {
+  "bits": 16,
+  "channels": 2,
+  "format": "pcm",
+  "frames": 400,
+  "kind": "int",
+  "rate": 8000,
+  "truncated": 1
+ },
+ "pcm24_mono": {
+  "bits": 24,
+  "channels": 1,
+  "format": "pcm",
+  "frames": 997,
+  "kind": "int",
+  "rate": 48000
+ },
+ "pcm24_stereo": {
+  "bits": 24,
+  "channels": 2,
+  "format": "pcm",
+  "frames": 997,
+  "kind": "int",
+  "rate": 48000
+ },
+ "pcm32_stereo": {
+  "bits": 32,
+  "channels": 2,
+  "format": "pcm",
+  "frames": 997,
+  "kind": "int",
+  "rate": 48000
+ },
+ "pcm8_mono_odd": {
+  "bits": 8,
+  "channels": 1,
+  "format": "pcm",
+  "frames": 1001,
+  "kind": "int",
+  "rate": 48000
+ },
+ "pcm8_stereo": {
+  "bits": 8,
+  "channels": 2,
+  "format": "pcm",
+  "frames": 997,
+  "kind": "int",
+  "rate": 48000
+ },
+ "rf64_pcm16": {
+  "bits": 16,
+  "channels": 2,
+  "container": "RF64",
+  "format": "pcm",
+  "frames": 400,
+  "kind": "int",
+  "rate": 8000
+ }
+}

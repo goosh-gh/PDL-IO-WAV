@@ -1,0 +1,11 @@
+^_Inline/
+^blib/
+^pm_to_blib
+^Makefile$
+^Makefile\.old$
+^MYMETA\.
+^PDL-IO-WAV-
+\.bak$
+\.swp$
+~$
+^\.git/
